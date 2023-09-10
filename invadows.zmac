@@ -71,10 +71,10 @@
 ; port 3 input: data stream from port 4 shifted by number of bits
 ;               specifed in port 2
 
-        .8080
+	.8080
 	.org	0
 
-        DI
+	DI
 	LXI	SP,$2400
 
 	MVI	C,112
@@ -82,21 +82,21 @@
 	LXI	H,$2400
 fill:
 
-        MVI	A,$55
+	MVI	A,$55
 	MVI	B,32
 l32a:
 	MOV	M,A
-        INX	H
+	INX	H
 	DCR	B
-        JNZ	l32a
+	JNZ	l32a
 
-        MVI	A,$AA
+	MVI	A,$AA
 	MVI	B,32
 l32b:
 	MOV	M,A
-        INX	H
+	INX	H
 	DCR	B
-        JNZ	l32b
+	JNZ	l32b
 
 	DCR	C
 	JNZ	fill
