@@ -21,12 +21,15 @@ but, if you do, that'll make you the controller for GDPR purposes.
 This software doesn't have any direct or indirect network connections.
 Additionally, it is non-commercial Open Source, out of CRA scope.
 The development process stops at "it works on one emulator" and is
-far from modern best practices. I don't recommend that you modify this
-software for use in an environment where cybersecurity is important,
-but, if you do, that'll be considered a significant modification
-for CRA purposes.
+far from modern best practices.
+I don't recommend that you modify this software for use in an environment
+where cybersecurity is important, but, if you do, that'll be considered a
+significant modification for CRA purposes.
 
 # Development environment
 This software is developed against [8bitworkshop](https://8bitworkshop.com/).
 Since 8bitworkshop uses [zmac](http://48k.ca/zmac.html) underneath, it
 can probably be compiled directly with zmac as well.
+Note: 8bitworkshop technically emulates a Z80, not an 8080. While I try only
+to use 8080-compatible opcodes and mnemonics, that alone doesn't guarantee
+that the code would work on a true 8080 environment (hardware or emulated.)
