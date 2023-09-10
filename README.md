@@ -28,3 +28,5 @@ for CRA purposes.
 
 # Development environment
 This software is developed against [8bitworkshop](https://8bitworkshop.com/).
+Since 8bitworkshop uses [zmac](http://48k.ca/zmac.html) underneath, it
+can probably be compiled directly with zmac as well.
