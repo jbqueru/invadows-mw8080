@@ -11,11 +11,17 @@
 ; You should have received a copy of the GNU General Public License along
 ; with this program. If not, see https://www.gnu.org/licenses/
 
-; ############################
-; ##                        ##
-; ##  HARDWARE ENVIRONMENT  ##
-; ##                        ##
-; ############################
+
+
+; ####################################
+; ####################################
+; ###                              ###
+; ###                              ###
+; ###     HARDWARE ENVIRONMENT     ###
+; ###                              ###
+; ###                              ###
+; ####################################
+; ####################################
 
 ; This software works on the hardware board that was developed by Midway
 ; and used for games from Gun Fight (1975) to Space Invaders II (1980).
@@ -70,38 +76,79 @@
 ; port 4 output: data stream
 ; port 3 input: data stream from port 4 shifted by number of bits
 ;               specifed in port 2
+;
+; Watchdog
+;
+; port 6 output: any write will reset the watchdog
 
-	.8080
-	.org	0
 
-	DI
-	LXI	SP,$2400
 
-	MVI	C,112
+; ####################
+; ####################
+; ###              ###
+; ###              ###
+; ###     CODE     ###
+; ###              ###
+; ###              ###
+; ####################
+; ####################
 
-	LXI	H,$2400
-fill:
+	.8080			; Beware: Space Invaders uses a true 8080
+				; but zmac and 8bitworkshop support full Z80
+				; such that there's a risk that this code
+				; might not work on actual hardware (or on
+				; a strict emulator
 
-	MVI	A,$55
-	MVI	B,32
-l32a:
+	.org	0		; Execution starts at address 0
+
+	DI			; There are no interrupts on the board.
+				; Specifically, the only way to count time
+				; is to count cycles
+
+	LXI	SP,$2400	; Set up the stack at the top of the
+				; scratch RAM
+
+	CALL	bg		; Fill background
+
+forever:
+	OUT	6		; Tickle watchdog
+	JMP	forever		; Main loop
+
+; #######################
+; ##                   ##
+; ##  BACKGROUND FILL  ##
+; ##                   ##
+; #######################
+
+; Inputs: none
+; Outputs: none
+; Modifies: ABCHL
+
+bg:
+	MVI	C,112		; 112 pairs of columns = 224 columns
+
+	LXI	H,$2400		; Start address of framebuffer
+bgfill:
+
+	MVI	A,$55		; Pattern for even columns
+	MVI	B,32		; 32 bytes per column
+bgl32a:
 	MOV	M,A
 	INX	H
 	DCR	B
-	JNZ	l32a
+	JNZ	bgl32a
 
-	MVI	A,$AA
-	MVI	B,32
-l32b:
+	MVI	A,$AA		; Pattern for odd columns
+	MVI	B,32		; 32 bytes per column
+bgl32b:
 	MOV	M,A
 	INX	H
 	DCR	B
-	JNZ	l32b
+	JNZ	bgl32b
 
 	DCR	C
-	JNZ	fill
-loop:
-	OUT	6
-	JMP	loop
-        
+	JNZ	bgfill
+
+	RET
+
 ; 345678901234567890123456789012345678901234567890123456789012345678901234567890
