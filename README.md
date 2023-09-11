@@ -4,7 +4,7 @@ A fake windowing system running on Midway 8080 hardware 1975-1980
 
 # Author
 The primary author and primary maintainer of this code is Jean-Baptiste
-"JBQ" "Djaybee" Queru, member of the Megabusters demo crew.
+"JBQ" "Djaybee" Queru, member of the MegaBuSTers demo crew.
 
 # License
 This repository is licensed under GPLv3, because I feel that there's
