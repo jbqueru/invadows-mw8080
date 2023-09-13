@@ -1,0 +1,296 @@
+On 9/12/2023, I asked ChatGPT to write code that would draw a rectangle
+on Space Invaders hardware. While the conversation seemed mostly sensical,
+the resulting code was so hilariously off that I can't resist keeping
+a copy for posterity.
+
+--
+
+=> write code that draws a white rectangle on space invaders hardware
+
+Drawing a white rectangle on Space Invaders hardware would typically
+involve low-level programming specific to the hardware platform you're
+working with. The exact code would depend on the hardware and programming
+language you're using. Space Invaders arcade machines from the late 1970s
+used custom hardware and microprocessors like the Intel 8080.
+
+Assuming you're emulating Space Invaders hardware and want to draw a white
+rectangle, you would typically need to manipulate memory-mapped graphics
+registers to set the pixel colors. Here's a simplified example in Python
+to give you an idea, although this won't run on real hardware but rather
+a simulated environment:
+
+import pygame
+import sys
+
+# Initialize the pygame library
+pygame.init()
+
+# Define the screen dimensions (Space Invaders resolution)
+screen_width = 224
+screen_height = 256
+
+# Create the screen surface
+screen = pygame.display.set_mode((screen_width, screen_height))
+
+# Define the rectangle's position and size
+rect_x = 100
+rect_y = 100
+rect_width = 50
+rect_height = 30
+
+# Define the white color
+white = (255, 255, 255)
+
+# Main game loop
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    # Clear the screen
+    screen.fill((0, 0, 0))
+
+    # Draw a white rectangle
+    pygame.draw.rect(screen, white, (rect_x, rect_y, rect_width, rect_height))
+
+    # Update the display
+    pygame.display.flip()
+
+# Quit the game
+pygame.quit()
+sys.exit()
+
+=> write that same code in 8080 assembly
+
+Writing a white rectangle on a Space Invaders arcade machine using 8080
+assembly language would involve interfacing directly with the machine's
+custom hardware, which is beyond the scope of a simple response. Space
+Invaders used a unique combination of custom hardware and microprocessors.
+Writing code for it requires extensive knowledge of the hardware's
+memory-mapped registers, video generation, and other specific details.
+
+However, I can provide a simplified example of how you might structure your
+assembly code to draw a white rectangle on such hardware, assuming you have
+access to the necessary hardware specifications and memory-mapped registers.
+
+; This is a simplified example and won't work on actual Space Invaders hardware.
+
+; Define memory-mapped registers for screen control
+SCREEN_WIDTH    equ 224
+SCREEN_HEIGHT   equ 256
+SCREEN_BASE     equ 0x2400  ; Address where video memory starts
+
+; Color codes
+WHITE           equ 0x00FF  ; White color (assuming 8-bit color depth)
+
+section .text
+    global _start
+
+_start:
+    ; Initialize hardware and set up video mode
+
+    ; Initialize registers for rectangle
+    mov ax, WHITE        ; Set color to white
+    mov cx, rect_width   ; Set rectangle width
+    mov dx, rect_height  ; Set rectangle height
+    mov si, rect_x       ; Set X-coordinate
+    mov di, rect_y       ; Set Y-coordinate
+
+draw_rectangle:
+    ; Draw the rectangle pixel by pixel
+    call draw_pixel
+    inc si               ; Move to the next X-coordinate
+    loop draw_rectangle  ; Loop until the entire rectangle is drawn
+
+    ; End of program
+
+draw_pixel:
+    ; Calculate the memory address for the current pixel
+    push ax
+    mov bx, si           ; Copy X-coordinate to BX
+    mul bx, dx           ; Multiply X by rectangle height
+    add bx, di           ; Add Y-coordinate
+    shl bx, 1            ; Multiply by 2 (assuming 16-bit color depth)
+
+    ; Set the pixel color in video memory
+    mov word [SCREEN_BASE + bx], ax
+    pop ax
+    ret
+
+; Define rectangle parameters
+rect_x      db 100
+rect_y      db 100
+rect_width  db 50
+rect_height db 30
+
+; End of program
+
+Please note that this is a highly simplified example and does not
+represent actual Space Invaders hardware or code. You would need
+access to the specific hardware documentation and the memory-mapped
+registers used in Space Invaders to write code that runs on the
+arcade machine itself. The code provided here is only a conceptual
+outline.
+
+=> Space invaders uses a 1-bit 256x224 framebuffer mapped at address $2400.
+
+Thank you for the clarification. Given that Space Invaders uses a
+1-bit (monochrome) 256x224 framebuffer mapped at address $2400,
+here's a simplified example of how you might write assembly code for
+the Intel 8080 to draw a white rectangle on Space Invaders hardware:
+
+; Space Invaders White Rectangle Example
+; Assumes a 1-bit (monochrome) 256x224 framebuffer mapped at address $2400
+
+ORG 0x1000  ; Your desired memory location for the program
+
+; Define constants
+SCREEN_WIDTH  equ 256
+SCREEN_HEIGHT equ 224
+FRAMEBUFFER   equ $2400  ; Address where the framebuffer starts
+
+WHITE         equ %00000001  ; 1-bit white pixel
+
+; Define rectangle parameters
+RECT_X        equ 100
+RECT_Y        equ 100
+RECT_WIDTH    equ 50
+RECT_HEIGHT   equ 30
+
+section .text
+    global _start
+
+_start:
+    ; Initialize registers
+    mov cx, RECT_HEIGHT  ; Load rectangle height into CX
+    mov di, RECT_Y       ; Load Y-coordinate into DI
+
+draw_row:
+    mov si, RECT_X       ; Load X-coordinate into SI
+
+draw_pixel:
+    ; Calculate the address of the pixel in the framebuffer
+    ; The framebuffer is organized as 1 bit per pixel, 8 pixels per byte
+    ; Formula: FRAMEBUFFER + (Y * SCREEN_WIDTH + X) / 8
+    mov ax, di           ; Y-coordinate
+    mul SCREEN_WIDTH     ; Y * SCREEN_WIDTH
+    add ax, si           ; (Y * SCREEN_WIDTH + X)
+    shr ax, 3            ; Divide by 8 (shift right 3 bits)
+    add ax, FRAMEBUFFER  ; Add the base address of the framebuffer
+
+    ; Set the pixel color to white
+    mov al, [ax]
+    or al, WHITE         ; Set the pixel to white
+    mov [ax], al
+
+    inc si               ; Move to the next X-coordinate
+    loop draw_pixel      ; Loop until the row is complete
+
+    inc di               ; Move to the next Y-coordinate
+    loop draw_row        ; Loop until the rectangle is complete
+
+    ; End of program
+    hlt
+
+times 0x1000 - ($ - _start) db 0  ; Fill the rest of the memory with zeros
+
+This code defines a white color as a 1-bit value and draws a white
+rectangle on the Space Invaders framebuffer. It calculates the
+address of each pixel in the framebuffer based on its X and Y coordinates
+and sets the pixel to white.
+
+Please note that this is still a simplified example, and the actual
+Space Invaders hardware may have more complex requirements and additional
+registers for controlling the display. Writing code for the original
+hardware would require access to the specific hardware documentation and
+a deeper understanding of its operation.
+
+=> this is 8086 assembly. please rewrite in 8080.
+
+I apologize for the mix-up. You're right; the code I provided in my
+previous responses was written in x86 assembly, not 8080 assembly.
+Here's a corrected version of the code in 8080 assembly language to
+draw a white rectangle on Space Invaders hardware:
+
+; Space Invaders White Rectangle Example (8080 Assembly)
+; Assumes a 1-bit (monochrome) 256x224 framebuffer mapped at address $2400
+
+ORG 0x1000  ; Your desired memory location for the program
+
+; Define constants
+SCREEN_WIDTH  equ 256
+SCREEN_HEIGHT equ 224
+FRAMEBUFFER   equ $2400  ; Address where the framebuffer starts
+
+WHITE         equ %00000001  ; 1-bit white pixel
+
+; Define rectangle parameters
+RECT_X        equ 100
+RECT_Y        equ 100
+RECT_WIDTH    equ 50
+RECT_HEIGHT   equ 30
+
+section .text
+    global _start
+
+_start:
+    ; Initialize registers
+    LXI B, RECT_Y       ; Load Y-coordinate into BC
+    LXI D, RECT_X       ; Load X-coordinate into DE
+
+draw_row:
+    ; Set DE to the starting X-coordinate
+    MOV A, E            ; Copy X-coordinate to A
+    INX D               ; Increment DE to the next X-coordinate
+
+draw_pixel:
+    ; Calculate the address of the pixel in the framebuffer
+    ; The framebuffer is organized as 1 bit per pixel, 8 pixels per byte
+    ; Formula: FRAMEBUFFER + (Y * SCREEN_WIDTH + X) / 8
+    MOV H, B            ; Copy Y-coordinate to HL
+    MOV L, A            ; Copy X-coordinate to HL
+    MVI A, 0x00         ; Clear the accumulator
+    MOV C, A            ; Clear carry flag
+
+    ; Calculate (Y * SCREEN_WIDTH + X) / 8
+    ADD HL, HL          ; Multiply Y by 2
+    ADD HL, HL          ; Multiply Y by 4
+    ADD HL, HL          ; Multiply Y by 8
+    ADD HL, HL          ; Multiply Y by 16
+    ADD HL, HL          ; Multiply Y by 32
+    ADD HL, HL          ; Multiply Y by 64
+    ADD HL, DE          ; Add X
+    RRC                 ; Right shift accumulator (divide by 8)
+
+    ; Add the base address of the framebuffer
+    ADD HL, B
+    STA M                ; Store the pixel address in memory
+
+    ; Set the pixel color to white
+    MVI A, 0xFF          ; Set A to 0xFF (white)
+    XRA M                ; XOR the pixel with white to set it to white
+
+    ; Move to the next X-coordinate
+    INR E
+
+    ; Check if the row is complete
+    CPI RECT_X + RECT_WIDTH
+    JNZ draw_pixel
+
+    ; Move to the next Y-coordinate
+    INR B
+
+    ; Check if the rectangle is complete
+    CPI RECT_Y + RECT_HEIGHT
+    JNZ draw_row
+
+    ; End of program
+    HLT
+
+times 0x1000 - ($ - _start) db 0  ; Fill the rest of the memory with zeros
+
+This code is written in 8080 assembly language and is designed to draw a
+white rectangle on the Space Invaders hardware, assuming a 1-bit monochrome
+framebuffer starting at address $2400. The code calculates the address of
+each pixel based on its X and Y coordinates and sets the pixel to white.
