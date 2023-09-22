@@ -165,7 +165,7 @@ FRAME_BUFFER	.equ	$2400
 	MVI	B,17
 	MVI	C,84
 	MVI	D,2
-	CALL	hwhite
+	CALL	hblack
 
 forever:
 	OUT	6		; Tickle watchdog
@@ -342,6 +342,69 @@ hwpixloop:
 	DAD	B
 	DCR	E
 	JNZ	hwpixloop
+
+	RET
+
+; #############################
+; ##                         ##
+; ##  HORIZONTAL LINE BLACK  ##
+; ##                         ##
+; #############################
+
+; Inputs: B: xleft
+;         C: xright
+;         D: y
+
+hblack:
+; compute number of columns, store in E
+	MOV	A,C
+	SUB	B
+	INR	A
+	MOV	E,A	; E = C - B + 1
+
+; address of the first column: HL = FRAME_BUFFER + B * 32
+	MOV	L,B
+	MVI	H,0
+	DAD	H
+	DAD	H
+	DAD	H
+	DAD	H
+	DAD	H
+	LXI	B,FRAME_BUFFER
+	DAD	B
+
+; address of first pixel: HL += (255 - D) >> 3
+	MOV	A,D
+	CMA
+	RRC
+	RRC
+	RRC
+	ANI	31
+	ADD	L
+	MOV	L,A
+
+; pattern of pixels: A = $80 >> (D & 7)
+	MOV	A,D
+	ANI	7
+	MOV	B,A
+	MVI	A,01111111b
+	JZ	hbshiftdone
+hbshift:
+	RRC
+	DCR	B
+	JNZ	hbshift
+hbshiftdone:
+	MOV	D,A
+
+; write the actual pixels
+	LXI	B,32
+hbpixloop:
+	MOV	A,D
+	ANA	M
+	MOV	M,A
+	DAD	B
+	DCR	E
+	JNZ	hbpixloop
 
 	RET
 
