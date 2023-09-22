@@ -1,3 +1,5 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+;
 ; This program is free software: you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation, either version 3 of the License, or
@@ -13,6 +15,25 @@
 
 
 
+; 80 columns, hard 8-character tabs
+
+
+
+; ###########################################################################
+; ###########################################################################
+; ###                                                                     ###
+; ###                                                                     ###
+; ###                               Invadows                              ###
+; ###                                                                     ###
+; ###   A windowing system running on Williams 8080 hardware, as used in  ###
+; ###       Gun Fight, Space Invaders, and quite a few other games.       ###
+; ###                                                                     ###
+; ###                                                                     ###
+; ###########################################################################
+; ###########################################################################
+
+
+
 ; ####################################
 ; ####################################
 ; ###                              ###
@@ -23,8 +44,8 @@
 ; ####################################
 ; ####################################
 
-; This software works on the hardware board that was developed by Midway
-; and used for games from Gun Fight (1975) to Space Invaders II (1980).
+; This software is designed on the hardware board that was built by
+; Midway for games from Gun Fight (1975) to Space Invaders II (1980).
 ;
 ; 8080 processor, starting execution at address $0000.
 ; 8kB of ROM from $0000 to $1FFF
@@ -79,8 +100,25 @@
 ;
 ; Watchdog
 ;
-; port 6 output: any write will reset the watchdog
+; port 6 output: in theory, any read or write will reset the watchdog.
+;                However, the 8bitworkshop emulator only resets on writes.
 
+
+; #############################
+; #############################
+; ###                       ###
+; ###                       ###
+; ###     MEMORY LAYOUT     ###
+; ###                       ###
+; ###                       ###
+; #############################
+; #############################
+
+; The stack lives at the top of the usable RAM, keeping 2 bytes at the top
+; to save SP when using it for other purposes.
+STACK_TOP	.equ	$23FE
+STACK_SAVE	.equ	$23FE
+FRAME_BUFFER	.equ	$2400
 
 
 ; ####################
@@ -93,20 +131,29 @@
 ; ####################
 ; ####################
 
+; ############
+; ##        ##
+; ##  INIT  ##
+; ##        ##
+; ############
+
 	.8080			; Beware: Space Invaders uses a true 8080
 				; but zmac and 8bitworkshop support full Z80
 				; such that there's a risk that this code
 				; might not work on actual hardware (or on
-				; a strict emulator
+				; a strict 8080 emulator)
 
 	.org	0		; Execution starts at address 0
 
-	DI			; There are no interrupts on the board.
-				; Specifically, the only way to count time
-				; is to count cycles
+	DI			; Let's not use interrupts (yet)
 
-	LXI	SP,$2400	; Set up the stack at the top of the
-				; scratch RAM
+	LXI	SP,STACK_TOP	; Set up the stack at the top of the user RAM
+
+; ############
+; ##        ##
+; ##  TEST  ##
+; ##        ##
+; ############
 
 	CALL	bg		; Fill background
 
@@ -124,6 +171,17 @@ forever:
 	OUT	6		; Tickle watchdog
 	JMP	forever		; Main loop
 
+; #################################
+; #################################
+; ###                           ###
+; ###                           ###
+; ###     GRAPHICS ROUTINES     ###
+; ###                           ###
+; ###                           ###
+; #################################
+; #################################
+
+
 ; ##########################
 ; ##                      ##
 ; ##  BACKGROUND STIPPLE  ##
@@ -137,7 +195,7 @@ forever:
 bg:
 	MVI	C,112		; 112 pairs of columns = 224 columns
 
-	LXI	H,$2400		; Start address of framebuffer
+	LXI	H,FRAME_BUFFER	; Start address of framebuffer
 bgcol:
 
 	MVI	A,$55		; Pattern for even columns
@@ -235,13 +293,13 @@ rwhite:
 ;         D: y
 
 hwhite:
-; compute number of columns
+; compute number of columns, store in E
 	MOV	A,C
 	SUB	B
 	INR	A
-	MOV	E,A
+	MOV	E,A	; E = C - B + 1
 
-; address of the first column
+; address of the first column: HL = FRAME_BUFFER + B * 32
 	MOV	L,B
 	MVI	H,0
 	DAD	H
@@ -249,10 +307,10 @@ hwhite:
 	DAD	H
 	DAD	H
 	DAD	H
-	LXI	B,$2400
+	LXI	B,FRAME_BUFFER
 	DAD	B
 
-; address of first pixel
+; address of first pixel: HL += (255 - D) >> 3
 	MOV	A,D
 	CMA
 	RRC
@@ -262,20 +320,20 @@ hwhite:
 	ADD	L
 	MOV	L,A
 
-; pattern of pixels
+; pattern of pixels: A = $80 >> (D & 7)
 	MOV	A,D
 	ANI	7
 	MOV	B,A
-	MVI	A,$80
+	MVI	A,10000000b
 	JZ	hwshiftdone
-	DCR	B
 hwshift:
 	RRC
 	DCR	B
-	JP	hwshift
+	JNZ	hwshift
 hwshiftdone:
 	MOV	D,A
 
+; write the actual pixels
 	LXI	B,32
 hwpixloop:
 	MOV	A,D
@@ -287,4 +345,4 @@ hwpixloop:
 
 	RET
 
-; 345678901234567890123456789012345678901234567890123456789012345678901234567890
+; 345678901234567890123456789012345678901234567890123456789012345678901234567
